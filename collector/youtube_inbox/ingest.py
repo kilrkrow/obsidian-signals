@@ -4,14 +4,13 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
-from zoneinfo import ZoneInfo
 
 from .daily import add_to_human_daily, add_to_machine_daily
 from .fetch import FetchError, fetch_video
 from .notes import section_body, video_note_path, wiki_link, write_video_note
 from .summary import summarize_video
 from .parse import extract_video_ids
-from .paths import LOCAL_TZ, vault_root
+from .paths import to_local, vault_root
 
 
 @dataclass
@@ -40,9 +39,7 @@ class IngestBatch:
 
 
 def local_today(now: datetime | None = None) -> datetime:
-    tz = ZoneInfo(LOCAL_TZ)
-    current = now.astimezone(tz) if now else datetime.now(tz)
-    return current
+    return to_local(now)
 
 
 def write_run_record(
@@ -52,7 +49,7 @@ def write_run_record(
     started: datetime,
     finished: datetime,
 ) -> Path:
-    local_day = started.astimezone(ZoneInfo(LOCAL_TZ)).date().isoformat()
+    local_day = to_local(started).date().isoformat()
     stamp = started.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_id = uuid4().hex[:8]
     folder = vault / "Machine" / "Runs" / local_day

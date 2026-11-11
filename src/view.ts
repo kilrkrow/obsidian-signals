@@ -128,7 +128,7 @@ export class SignalsView extends ItemView {
       title: id === "pending" ? "Dropped signal" : id,
       status: "capturing",
     });
-    this.statusText = "Capturing…";
+    this.statusText = "Capturing...";
     void this.render();
     this.chain = this.chain
       .then(() => this.capture(key, trimmed))
@@ -188,7 +188,7 @@ export class SignalsView extends ItemView {
     });
 
     const row = drop.createDiv({ cls: "signals-row" });
-    const input = row.createEl("input", { type: "text", placeholder: "https://www.youtube.com/watch?v=…" });
+    const input = row.createEl("input", { type: "text", placeholder: "https://www.youtube.com/watch?v=..." });
     const button = row.createEl("button", { text: "Capture", cls: "mod-cta" });
     button.addEventListener("click", () => this.enqueue(input.value));
     input.addEventListener("keydown", (event) => {

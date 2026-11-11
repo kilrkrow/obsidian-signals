@@ -33,6 +33,10 @@ jobs:
         if: hashFiles('package.json') != ''
         run: npm ci
 
+      - name: tsc --noEmit
+        if: hashFiles('package.json') != ''
+        run: npx tsc --noEmit
+
       - name: npm run build
         if: hashFiles('package.json') != ''
         run: npm run build

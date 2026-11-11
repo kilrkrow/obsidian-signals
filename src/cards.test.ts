@@ -1,5 +1,7 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import { strict as assert } from "node:assert";
+import { test } from "node:test";
+// Node runs this file with type stripping, which needs the explicit .ts extension.
+// @ts-expect-error TS5097: the plugin build never imports this test file.
 import { cardFromNote, parseFrontmatter, pillLabel, sortCards, youtubeIdFromDrop } from "./cards.ts";
 
 test("parses quoted youtube titles", () => {

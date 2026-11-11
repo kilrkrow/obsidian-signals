@@ -59,7 +59,7 @@ The settings tab and the pane show the plugin version (`Signals <version>`).
 |---|---|---|
 | `SIGNALS_VAULT` | `<collector>/vault` | Vault to write into. The plugin always sets it to the open vault. |
 | `SIGNALS_YT_COOKIES_BROWSER` | tries `firefox`, `edge`, `chrome` | Browser cookies for captions. The plugin sets it from **Caption browser**. |
-| `SIGNALS_TZ` | `America/Los_Angeles` | Time zone used to pick "today" for daily notes and run records. |
+| `SIGNALS_TZ` | system time zone | IANA time zone (for example `Europe/Berlin`) used to pick "today" for daily notes and run records. |
 | `SIGNALS_SUMMARY_MODEL` | `gemma4:e4b` | Local Ollama model for the optional summary (see below). |
 
 ### What the collector writes (relative to the vault)
