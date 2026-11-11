@@ -1,0 +1,20 @@
+{
+  "id": "fixture0001",
+  "title": "Fixture: a test video",
+  "author": "Fixture Channel",
+  "channel_url": "https://www.youtube.com/@fixturechannel",
+  "url": "https://www.youtube.com/watch?v=fixture0001",
+  "published": "2026-01-01",
+  "views": 1234,
+  "duration_seconds": 125,
+  "description": "A description with links https://example.com/one and https://example.com/two.",
+  "thumbnail": "https://i.ytimg.com/vi/fixture0001/hqdefault.jpg",
+  "tags": ["fixture"],
+  "chapters": [
+    {"start": 0, "title": "Intro"},
+    {"start": 90, "title": "Main part"}
+  ],
+  "transcript": "first line\n\na <b> c",
+  "transcript_error": null,
+  "summary": "Fixture summary."
+}

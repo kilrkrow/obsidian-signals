@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube inbox</title>
+  <style>
+    :root {
+      --bg: #161412;
+      --panel: #211e1b;
+      --ink: #f4efe6;
+      --muted: #b7aea2;
+      --line: #3a342c;
+      --accent: #e2b657;
+      --ok: #8fbf7a;
+      --bad: #d9786a;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Segoe UI", "Iowan Old Style", Georgia, serif;
+      background:
+        radial-gradient(1200px 500px at 20% -10%, #2b2418 0%, transparent 50%),
+        var(--bg);
+      color: var(--ink);
+    }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    h1 { font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+    .lede { color: var(--muted); margin: 0 0 28px; line-height: 1.45; }
+    #drop {
+      border: 2px dashed var(--line);
+      background: var(--panel);
+      border-radius: 18px;
+      min-height: 280px;
+      padding: 36px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    #drop.hot {
+      border-color: var(--accent);
+      background: #2a2418;
+    }
+    #drop strong { font-size: 1.35rem; }
+    #drop span { color: var(--muted); }
+    form { margin-top: 20px; display: flex; gap: 8px; }
+    input[type="text"] {
+      flex: 1;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font: inherit;
+    }
+    button {
+      background: var(--accent);
+      color: #1a150c;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #status { margin-top: 18px; color: var(--muted); min-height: 1.4em; }
+    #status.ok { color: var(--ok); }
+    #status.bad { color: var(--bad); }
+    .card {
+      margin-top: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+    .card img { width: 160px; border-radius: 8px; display: block; }
+    .card h2 { font-size: 1.05rem; margin: 0 0 6px; }
+    .card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>YouTube inbox</h1>
+    <p class="lede">
+      Drag a YouTube thumbnail, a watch URL, or an <code>i.ytimg.com</code> image onto the box.
+      The collector writes a video page and adds a wiki-link on today's daily note.
+    </p>
+    <div id="drop">
+      <strong>Drop a thumbnail or URL</strong>
+      <span>Also paste with Ctrl+V</span>
+    </div>
+    <form id="form">
+      <input id="url" type="text" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" />
+      <button type="submit">Capture</button>
+    </form>
+    <div id="status"></div>
+    <div id="results"></div>
+  </main>
+  <script>
+    const drop = document.getElementById("drop");
+    const statusEl = document.getElementById("status");
+    const results = document.getElementById("results");
+    const form = document.getElementById("form");
+    const urlInput = document.getElementById("url");
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = kind || "";
+    }
+
+    async function gatherDrop(event) {
+      const dt = event.dataTransfer;
+      const chunks = [];
+      if (dt) {
+        chunks.push(dt.getData("text/uri-list"));
+        chunks.push(dt.getData("text/plain"));
+        chunks.push(dt.getData("text/html"));
+        chunks.push(dt.getData("text/x-moz-url"));
+        if (dt.files) {
+          for (const file of dt.files) {
+            const name = file.name.toLowerCase();
+            if (
+              file.type.startsWith("text") ||
+              name.endsWith(".url") ||
+              name.endsWith(".md") ||
+              name.endsWith(".html") ||
+              name.endsWith(".txt")
+            ) {
+              chunks.push(await file.text());
+            }
+          }
+        }
+      }
+      return chunks.filter(Boolean).join("\n");
+    }
+
+    async function ingest(raw) {
+      setStatus("Capturing…");
+      results.innerHTML = "";
+      const res = await fetch("/api/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ raw }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setStatus(data.error || "Ingest failed", "bad");
+        return;
+      }
+      if (!data.results || data.results.length === 0) {
+        setStatus("No YouTube video id found in that drop.", "bad");
+        return;
+      }
+      const failed = data.results.filter((r) => r.status === "failed");
+      if (failed.length === data.results.length) {
+        setStatus(failed[0].error || "All captures failed", "bad");
+      } else {
+        setStatus("Captured " + data.results.length + " video(s).", "ok");
+      }
+      for (const item of data.results) {
+        const card = document.createElement("div");
+        card.className = "card";
+        const thumb = "https://i.ytimg.com/vi/" + item.video_id + "/hqdefault.jpg";
+        card.innerHTML =
+          '<img alt="" src="' + thumb + '" />' +
+          "<div>" +
+          "<h2>" + (item.title || item.video_id) + "</h2>" +
+          "<p>" + (item.author || "") + "</p>" +
+          "<p>" + (item.status === "failed" ? item.error : "Note + daily link written") + "</p>" +
+          "</div>";
+        results.appendChild(card);
+      }
+    }
+
+    drop.addEventListener("dragenter", (e) => { e.preventDefault(); drop.classList.add("hot"); });
+    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("hot"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("hot"));
+    drop.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      drop.classList.remove("hot");
+      const raw = await gatherDrop(e);
+      if (!raw.trim()) {
+        setStatus("That drop did not include a URL. Try dragging the video title or pasting the watch link.", "bad");
+        return;
+      }
+      ingest(raw);
+    });
+    document.addEventListener("paste", (e) => {
+      const raw = (e.clipboardData && e.clipboardData.getData("text")) || "";
+      if (raw.trim()) ingest(raw);
+    });
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      ingest(urlInput.value);
+    });
+  </script>
+</body>
+</html>
