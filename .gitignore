@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Plugin build output (attached to releases, never committed)
+main.js
+*.js.map
+build/
+dist/
+out/
+
+# Obsidian plugin machine data
+data.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Logs and editor/OS noise
+npm-debug.log*
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

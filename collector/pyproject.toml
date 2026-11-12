@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "youtube-inbox"
+version = "0.1.0"
+description = "Local YouTube collector used by the Signals Obsidian plugin"
+readme = { text = "Local YouTube collector used by the Signals Obsidian plugin. Run: python -m youtube_inbox --help", content-type = "text/plain" }
+license = "MIT"
+authors = [{ name = "kilrkrow" }]
+requires-python = ">=3.11"
+dependencies = [
+  "yt-dlp>=2025.1.0",
+  "tzdata>=2024.1",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[tool.setuptools]
+packages = ["youtube_inbox", "youtube_inbox.static"]
+
+[tool.setuptools.package-data]
+"youtube_inbox.static" = ["*.html"]

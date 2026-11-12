@@ -1,0 +1,10 @@
+{
+  "id": "signals",
+  "name": "Signals",
+  "version": "0.1.0",
+  "minAppVersion": "1.7.0",
+  "description": "Drop a YouTube thumbnail or URL. Writes the video note and pins it on today's daily note.",
+  "author": "kilrkrow",
+  "authorUrl": "https://github.com/kilrkrow",
+  "isDesktopOnly": true
+}

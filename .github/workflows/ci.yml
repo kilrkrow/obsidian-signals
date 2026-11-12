@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  plugin:
+    name: Plugin (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Skip notice (no package.json yet)
+        if: hashFiles('package.json') == ''
+        shell: bash
+        run: echo "::notice::package.json not found; plugin build and tests skipped."
+
+      - uses: actions/setup-node@v7
+        if: hashFiles('package.json') != ''
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: npm ci
+        if: hashFiles('package.json') != ''
+        run: npm ci
+
+      - name: tsc --noEmit
+        if: hashFiles('package.json') != ''
+        run: npx tsc --noEmit
+
+      - name: npm run build
+        if: hashFiles('package.json') != ''
+        run: npm run build
+
+      - name: npm test
+        if: hashFiles('package.json') != ''
+        run: npm test
+
+      - name: Upload main.js
+        if: hashFiles('package.json') != '' && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: main.js
+          path: main.js
+          if-no-files-found: error
+
+  collector:
+    name: Collector (Python 3.11)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Skip notice (no collector/ yet)
+        if: hashFiles('collector/**') == ''
+        shell: bash
+        run: echo "::notice::collector/ not found; collector install and tests skipped."
+
+      - uses: actions/setup-python@v7
+        if: hashFiles('collector/**') != ''
+        with:
+          python-version: '3.11'
+
+      - name: pip install -e collector/
+        if: hashFiles('collector/**') != ''
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install -e collector/
+
+      - name: pytest collector/tests
+        if: hashFiles('collector/**') != ''
+        run: pytest collector/tests
